@@ -24,7 +24,13 @@ ANCHO = {"conglome": 6, "vivienda": 3, "hogar": 2, "codperso": 2, "ubigeo": 6}  
 POBREZA_NACIONAL, POBREZA_URBANA, POBREZA_RURAL = 27.6, 24.8, 39.3
 TOLERANCIA = 0.1                                    # puntos porcentuales
 RESIDENTES = 108_664
-DEPARTAMENTOS = [f"{i:02d}" for i in range(1, 26)]
+# Códigos de ubigeo[:2] (iguales a FIRST_IDDP del GeoJSON del curso); los nombres llevan tildes para gráficos y mapas
+DEPARTAMENTOS = {
+    "01": "Amazonas", "02": "Áncash", "03": "Apurímac", "04": "Arequipa", "05": "Ayacucho", "06": "Cajamarca",
+    "07": "Callao", "08": "Cusco", "09": "Huancavelica", "10": "Huánuco", "11": "Ica", "12": "Junín",
+    "13": "La Libertad", "14": "Lambayeque", "15": "Lima", "16": "Loreto", "17": "Madre de Dios", "18": "Moquegua",
+    "19": "Pasco", "20": "Piura", "21": "Puno", "22": "San Martín", "23": "Tacna", "24": "Tumbes", "25": "Ucayali",
+}
 
 
 def leer(ruta, columnas):
@@ -62,6 +68,7 @@ base = personas.merge(sumaria, on=LLAVES, how="left", validate="m:1", indicator=
 # 4. Construir
 for df in (sumaria, base):
     df["ccdd"] = df.ubigeo.str[:2]
+    df["departamento"] = df.ccdd.map(DEPARTAMENTOS)
     df["urbano"] = df.estrato <= 5
     df["pobre"] = df.pobreza <= 2
     df["gasto_real_pc"] = df.gashog2d / df.mieperho / 12 / df.ld       # soles mensuales por persona, a precios de Lima
@@ -89,7 +96,7 @@ validaciones = [
     ("La unión no pierde ni duplica personas", f"{len(base):,} filas, {(base._merge != 'both').sum()} sin hogar",
      f"{len(personas):,} filas, 0 sin hogar", len(base) == len(personas) and (base._merge == "both").all()),
     ("Departamentos (ubigeo[:2])", f"{len(codigos)}: {codigos[0]}–{codigos[-1]}", "25: 01–25",
-     codigos == DEPARTAMENTOS),
+     codigos == list(DEPARTAMENTOS)),
     ("Factores de expansión completos y positivos",
      f"factor07 {sumaria.factor07.isna().sum()} vacíos, facpob07 {base.facpob07.isna().sum()} vacíos",
      "0 vacíos, todos > 0", bool((sumaria.factor07 > 0).all() and (base.facpob07 > 0).all())),
@@ -121,7 +128,7 @@ base.drop(columns="_merge").to_parquet(SALIDAS / "personas_2024.parquet", index=
 
 sumaria["peso"] = peso_hogar
 sumaria.to_parquet(SALIDAS / "hogares_2024.parquet", index=False)      # para cifras por área y departamento
-indicadores = sumaria.groupby("ccdd").apply(lambda d: pd.Series({
+indicadores = sumaria.groupby(["ccdd", "departamento"]).apply(lambda d: pd.Series({
     "poblacion": d.peso.sum(),
     "pobreza_pct": pct(d.pobre, d.peso),
     "gasto_real_pc": promedio(d.gasto_real_pc, d.peso),

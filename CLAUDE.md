@@ -82,6 +82,8 @@ Viene de `brisacruz22/mcp-bcrp` (sesión 04), copiado literal y luego extendido.
     `indicadores.csv` y `validacion.txt`
   - [x] `graficando-enaho`: pobreza, gasto o ingreso por área, sexo o departamento (factores mixtos, documentados en
     su SKILL.md); se activa sola y encadena `limpiando-enaho` si faltan las bases
+  - [x] `mapeando-enaho`: mapa de pobreza, gasto o ingreso por departamento, unido por código, validado contra la
+    sesión 16 (dif. máx. 0.05); se activa sola y encadena `limpiando-enaho`
   - [ ] **Después de validar:** agregar el módulo 05 (empleo por rama). Antes, confirmar en su diccionario la
     variable de rama y el factor (¿`fac500a`?), decidir cómo agrupar las ramas y a quiénes contar (ocupados, 14+)
   - [ ] Composición del ingreso (parte de «condiciones de vida»): sale de la sumaria (módulo 34), no del 05. Elegir

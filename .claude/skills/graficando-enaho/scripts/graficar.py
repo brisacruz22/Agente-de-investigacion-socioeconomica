@@ -20,13 +20,6 @@ SALIDAS = RAIZ / "salidas"
 FIGURAS = RAIZ / "figuras"
 AZUL, FONDO, TEXTO, TEXTO_SUAVE = "#2E5E7E", "#fcfcfb", "#0b0b0b", "#52514e"     # el azul de grafico en el MCP
 
-# Códigos de FIRST_IDDP en el GeoJSON del curso; los nombres llevan tildes para el gráfico
-DEPARTAMENTOS = {
-    "01": "Amazonas", "02": "Áncash", "03": "Apurímac", "04": "Arequipa", "05": "Ayacucho", "06": "Cajamarca",
-    "07": "Callao", "08": "Cusco", "09": "Huancavelica", "10": "Huánuco", "11": "Ica", "12": "Junín",
-    "13": "La Libertad", "14": "Lambayeque", "15": "Lima", "16": "Loreto", "17": "Madre de Dios", "18": "Moquegua",
-    "19": "Pasco", "20": "Piura", "21": "Puno", "22": "San Martín", "23": "Tacna", "24": "Tumbes", "25": "Ucayali",
-}
 # indicador: (columna, nombre, unidad)
 INDICADORES = {
     "pobreza": ("pobre", "Pobreza monetaria", "% de personas"),
@@ -46,8 +39,7 @@ def cargar(nombre):
     if not ruta.exists():
         sys.exit(f"ERROR: no existe {ruta.relative_to(RAIZ)}. Corran primero la skill limpiando-enaho.")
     df = pd.read_parquet(ruta)
-    df["area"] = df.urbano.map({True: "Urbana", False: "Rural"})
-    df["departamento"] = df.ccdd.map(DEPARTAMENTOS)
+    df["area"] = df.urbano.map({True: "Urbana", False: "Rural"})      # departamento ya viene de limpiar.py
     if "p207" in df:
         df["sexo"] = df.p207.map({1: "Hombres", 2: "Mujeres"})
     return df
