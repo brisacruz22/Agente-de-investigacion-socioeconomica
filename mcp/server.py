@@ -287,8 +287,8 @@ def _frecuencia_de(periodo):
     raise ToolError(f"Periodo {periodo!r} no válido: usen '2022' (anual), '2022-T4' (trimestral) o '2022-12' (mensual).")
 
 
-@mcp.tool(annotations=SOLO_LECTURA)
-def comparar_departamentos(texto: str, periodo: str) -> dict:
+@mcp.tool(annotations={"readOnlyHint": False, "openWorldHint": True})     # escribe un CSV si guardar=True
+def comparar_departamentos(texto: str, periodo: str, guardar: bool = False) -> dict:
     """El mismo indicador del BCRP para todos los departamentos que lo tienen, en un periodo, ordenado de mayor a
     menor y con el código INEI del departamento (ccdd) para cruzarlo con la ENAHO.
 
@@ -296,7 +296,9 @@ def comparar_departamentos(texto: str, periodo: str) -> dict:
     "produccion oro", "credito directo", "producto bruto interno constantes"). periodo: "2022" (anual),
     "2022-T4" (trimestral) o "2022-12" (mensual); la frecuencia sale del formato.
     Si las palabras calzan con varios indicadores, devuelve un error con las opciones para afinar la búsqueda.
-    Los departamentos sin dato en ese periodo van en «faltantes»: no se inventan."""
+    Los departamentos sin dato en ese periodo van en «faltantes»: no se inventan.
+    guardar=True escribe además salidas/bcrp_<texto>_<periodo>.csv (ccdd, departamento, código, valor, unidad e
+    indicador) para cruzarlo con la ENAHO sin copiar cifras a mano."""
     frec = _frecuencia_de(periodo)
     df = catalogo()
     df = df[(df.geografia.str.strip() == "RE") & (df.frecuencia == frec)]
@@ -310,6 +312,11 @@ def comparar_departamentos(texto: str, periodo: str) -> dict:
         raise ToolError(f"No hay series departamentales {frec.lower()}es con «{texto}». Prueben con menos palabras "
                         "o busquen primero con buscar_series.")
     firmas = sel.firma.value_counts()
+    if len(firmas) > 1:      # si un solo indicador no tiene palabras de más (tradicionales vs NO tradicionales), es ese
+        palabras = set(_sin_tildes(texto).split())
+        exactas = [f for f in firmas.index if set(re.findall(r"[a-z0-9]+", _sin_tildes(f.split("|")[-1]))) <= palabras]
+        if len(exactas) == 1:
+            sel, firmas = sel[sel.firma == exactas[0]], firmas[[exactas[0]]]
     if len(firmas) > 1:
         opciones = "; ".join(firmas.index[:10])
         raise ToolError(f"«{texto}» calza con {len(firmas)} indicadores; agreguen palabras para elegir uno. "
@@ -330,11 +337,19 @@ def comparar_departamentos(texto: str, periodo: str) -> dict:
                       "valor": s["datos"][-1]["valor"], "fuente": s["fuente"]})
     datos.sort(key=lambda d: d["valor"], reverse=True)
     lima = [d["departamento"] for d in datos if d["ccdd"] in ("15", "15+07")]
-    return {"indicador": sel.iloc[0].firma,
-            "periodo": periodo, "unidad": unidad, "fuente_original": _ficha_completa(sel.iloc[0].codigo)["fuente_original"],
-            "n": len(datos), "datos": datos, "faltantes": faltantes,
-            "nota": ("El BCRP separa " + " y ".join(lima) + "; en la ENAHO ambas son el departamento 15.")
-                    if len(lima) > 1 else ""}
+    resultado = {"indicador": sel.iloc[0].firma,
+                 "periodo": periodo, "unidad": unidad,
+                 "fuente_original": _ficha_completa(sel.iloc[0].codigo)["fuente_original"],
+                 "n": len(datos), "datos": datos, "faltantes": faltantes,
+                 "nota": ("El BCRP separa " + " y ".join(lima) + "; en la ENAHO ambas son el departamento 15.")
+                         if len(lima) > 1 else ""}
+    if guardar:
+        archivo = RAIZ / "salidas" / f"bcrp_{re.sub(r'[^a-z0-9]+', '_', _sin_tildes(texto)).strip('_')}_{periodo}.csv"
+        archivo.parent.mkdir(exist_ok=True)
+        tabla = pd.DataFrame(datos)[["ccdd", "departamento", "codigo", "valor"]]
+        tabla.assign(unidad=unidad, periodo=periodo, indicador=resultado["indicador"]).to_csv(archivo, index=False)
+        resultado["csv"] = str(archivo.relative_to(RAIZ))
+    return resultado
 
 
 def _etiqueta(ficha):

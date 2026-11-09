@@ -1,0 +1,17 @@
+exportacion,condicion,spearman
+Minería,Pobreza (%),-0.141
+Minería,Gasto real por persona,0.045
+Minería,Ingreso real por persona,0.092
+Minería,Ingreso del trabajo (%),0.653
+Minería,Transferencias (%),0.119
+Agro,Pobreza (%),-0.046
+Agro,Gasto real por persona,0.075
+Agro,Ingreso real por persona,0.04
+Agro,Ingreso del trabajo (%),-0.436
+Agro,Transferencias (%),0.055
+Pesca,Pobreza (%),0.001
+Pesca,Gasto real por persona,0.303
+Pesca,Ingreso real por persona,0.357
+Pesca,Ingreso del trabajo (%),-0.277
+Pesca,Transferencias (%),-0.085
+Minería,Empleo en minería (%),0.75

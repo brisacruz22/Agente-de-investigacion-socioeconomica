@@ -47,7 +47,7 @@ Viene de `brisacruz22/mcp-bcrp` (sesión 04), copiado literal y luego extendido.
 | `buscar_series`, `serie`, `resumen` | Sesión 04 | Buscar códigos, bajar datos, resumir sin cuentas a mano |
 | `correlacion` | Ejemplo del issue, implementado en la sesión 04 | Herramienta de análisis que cumple ese requisito |
 | `metadatos` | Idea de Brisa | Unidad (sacada del nombre si el catálogo la deja vacía), fuente original, cobertura, departamento y ccdd |
-| `comparar_departamentos` | Tarea 4 | Una serie para todos los departamentos en un periodo, ordenada y con ccdd para cruzar con la ENAHO |
+| `comparar_departamentos` | Tarea 4 | Una serie para todos los departamentos en un periodo, ordenada y con ccdd para cruzar con la ENAHO; con `guardar=True` deja `salidas/bcrp_<texto>_<periodo>.csv`. Si varios indicadores calzan, elige el único sin palabras de más («tradicionales pesqueros» ≠ «no tradicionales pesqueros») |
 | `grafico` | Tarea 4 | `linea`, `area_apilada` (con `porcentaje`) o `barras`; PNG + CSV en `figuras/`; bases de python-graph-gallery.com |
 
 - Tests: `mcp/test_server.py` (8 originales, **no se tocan**) + `mcp/test_propias.py` (2). Meta: `uv run pytest` → 10 passed.
@@ -89,6 +89,22 @@ Viene de `brisacruz22/mcp-bcrp` (sesión 04), copiado literal y luego extendido.
   - [x] Composición del ingreso en `indicadores.csv` (`ing_*_pct`, con `factor07`); «otros» = diferencia con
     `inghog2d`. Detalle de ambos en el SKILL.md de `limpiando-enaho`. 14/14 validaciones
 - [ ] Parte 3: corrida del agente, `informes/informe_final.md`, 3 cifras verificadas a mano
+  - Decisión (9 nov 2026): la actividad económica principal se operacionaliza con la **participación de cada grupo
+    de productos en las exportaciones del departamento** (BCRP, vía MCP, hasta 2022). El empleo por rama de la ENAHO
+    (`empleo_*_pct`) es complemento: la minería pesa en producción y poco en empleo. Literatura: cociente de
+    localización y especialización absoluta vs relativa (búsqueda en Consensus, en la conversación 08)
+  - [x] Grupos: Minería = tradicionales mineros; Agro = tradicionales agrícolas + no tradicionales agropecuarios;
+    Pesca = tradicionales + no tradicionales pesqueros; Otros = el resto. Actividad principal = la de mayor
+    participación
+  - [x] `analisis/cruzar.py`: lee los 6 CSV de `comparar_departamentos(..., "2022", guardar=True)` e
+    `indicadores.csv`, une por `ccdd` (25 dptos.), Spearman y resumen ponderado por población; guarda
+    `salidas/cruce_*.csv` y `figuras/cruce_mineria_pobreza.png`
+  - Limitación para el informe: SUNAT asigna el `UBIGEO` de la DUA al lugar de producción (frescos) o de fabricación
+    (procesados); no está confirmado que el BCRP lo use igual (Mincetur reclasifica). Explicaría la minería del Callao
+  - [ ] Corrida del agente en sesión nueva solo con la pregunta (≥ 2 herramientas MCP + ≥ 2 skills), exportada a
+    `evidencias_ia/integracion/`; luego el informe
 - [ ] Parte 4: 10 preguntas (4 BCRP, 4 ENAHO, 2 combinadas), modos A y B, `comparacion.md`, README de 12 secciones
+  - Se idean después del informe, con verdades sacadas de cifras ya verificadas por script. `evaluacion/preguntas.csv`
+    y `evaluar.py` son los de la sesión 04 (10 preguntas BCRP macro): se reusa el script, no esas preguntas
 - [ ] Pendiente: copia de la guía de variables con una columna de palabras clave para búsqueda en lenguaje natural
 - [ ] Evidencias de IA: exportar cada conversación, numerada (la 01 es la de planificación en claude.ai)

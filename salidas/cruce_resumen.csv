@@ -1,0 +1,5 @@
+actividad_principal,departamentos,lista,poblacion,pobreza_pct,gasto_real_pc,ingreso_real_pc
+Agro,6,"Lambayeque, San Martín, Amazonas, Ucayali, Piura, Huánuco",6213239.28,26.68,847.77,1011.85
+Minería,15,"Ica, Moquegua, Madre de Dios, Arequipa, Junín, Cusco, Áncash, Apurímac, Tacna, La Libertad, Ayacucho, Huancavelica, Pasco, Puno, Cajamarca",14455903.65,26.68,855.52,1092.13
+Otros,3,"Lima, Callao, Loreto",13551596.88,28.97,949.65,1262.76
+Pesca,1,Tumbes,261959.09,26.9,866.94,1051.86
