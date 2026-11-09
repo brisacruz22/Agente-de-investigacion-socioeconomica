@@ -80,8 +80,12 @@ Viene de `brisacruz22/mcp-bcrp` (sesión 04), copiado literal y luego extendido.
 - [ ] Parte 2: skills `limpiando-enaho`, `graficando-enaho`, `mapeando-enaho`
   - [x] `limpiar.py` con los módulos 34 y 02 (copiados a `datos/`), validado; sale `personas_2024.parquet`,
     `indicadores.csv` y `validacion.txt`
+  - [x] `graficando-enaho`: pobreza, gasto o ingreso por área, sexo o departamento (factores mixtos, documentados en
+    su SKILL.md); se activa sola y encadena `limpiando-enaho` si faltan las bases
   - [ ] **Después de validar:** agregar el módulo 05 (empleo por rama). Antes, confirmar en su diccionario la
     variable de rama y el factor (¿`fac500a`?), decidir cómo agrupar las ramas y a quiénes contar (ocupados, 14+)
+  - [ ] Composición del ingreso (parte de «condiciones de vida»): sale de la sumaria (módulo 34), no del 05. Elegir
+    en `reference.md` las variables (ingreso por trabajo, transferencias…) y agregarlas a `indicadores.csv`
 - [ ] Parte 3: corrida del agente, `informes/informe_final.md`, 3 cifras verificadas a mano
 - [ ] Parte 4: 10 preguntas (4 BCRP, 4 ENAHO, 2 combinadas), modos A y B, `comparacion.md`, README de 12 secciones
 - [ ] Pendiente: copia de la guía de variables con una columna de palabras clave para búsqueda en lenguaje natural

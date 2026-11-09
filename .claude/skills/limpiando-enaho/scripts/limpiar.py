@@ -120,6 +120,7 @@ if fallidas:
 base.drop(columns="_merge").to_parquet(SALIDAS / "personas_2024.parquet", index=False)
 
 sumaria["peso"] = peso_hogar
+sumaria.to_parquet(SALIDAS / "hogares_2024.parquet", index=False)      # para cifras por área y departamento
 indicadores = sumaria.groupby("ccdd").apply(lambda d: pd.Series({
     "poblacion": d.peso.sum(),
     "pobreza_pct": pct(d.pobre, d.peso),
@@ -127,4 +128,4 @@ indicadores = sumaria.groupby("ccdd").apply(lambda d: pd.Series({
     "ingreso_real_pc": promedio(d.ingreso_real_pc, d.peso),
 }), include_groups=False).round(2).reset_index()
 indicadores.to_csv(SALIDAS / "indicadores.csv", index=False)
-print("\nGuardados: salidas/personas_2024.parquet, salidas/indicadores.csv")
+print("\nGuardados: salidas/personas_2024.parquet, salidas/hogares_2024.parquet, salidas/indicadores.csv")
