@@ -86,7 +86,7 @@ El detalle de cada variable está en el `SKILL.md` y el `reference.md` de `limpi
 
 | Fuente | Datos | Descarga |
 |---|---|---|
-| INEI | ENAHO 2024 (código de encuesta 966): módulo 34 `sumaria-2024.dta`, módulo 02 `enaho01-2024-200.dta`, módulo 05 `enaho01a-2024-500.dta` | [Microdatos del INEI](https://proyectos.inei.gob.pe/microdatos/) → ENAHO metodología actualizada → 2024 → anual. Descomprimir en `datos/966-Modulo34/`, `datos/966-Modulo02/` y `datos/966-Modulo05/` |
+| INEI | ENAHO 2024 (código de encuesta 966): módulo 34 `sumaria-2024.dta`, módulo 02 `enaho01-2024-200.dta`, módulo 05 `enaho01a-2024-500.dta` | Zip en Stata: [módulo 34](https://proyectos.inei.gob.pe/iinei/srienaho/descarga/STATA/966-Modulo34.zip), [módulo 02](https://proyectos.inei.gob.pe/iinei/srienaho/descarga/STATA/966-Modulo02.zip) y [módulo 05](https://proyectos.inei.gob.pe/iinei/srienaho/descarga/STATA/966-Modulo05.zip). Descomprimir en `datos/966-Modulo34/`, `datos/966-Modulo02/` y `datos/966-Modulo05/` |
 | BCRP | Series estadísticas y catálogo de metadatos | Automática: el MCP usa la [API del BCRP](https://estadisticas.bcrp.gob.pe/estadisticas/series/ayuda/api) y baja el catálogo a `datos/catalogo_bcrp.csv` la primera vez |
 | Curso | Límites departamentales `peru_departamental_simple.geojson` | Automática: la baja `mapeando-enaho` del repositorio del curso si falta en `datos/` |
 
@@ -210,7 +210,12 @@ El agente hizo lo siguiente:
    16: 0.05).
 6. Respondió con cuatro hallazgos, todos con su serie, variable y factor de expansión, y con las limitaciones.
 
-En total usó 2 herramientas MCP y 2 skills en una misma ejecución. Después se generó un gráfico del BCRP con `grafico`
+En total usó 2 herramientas MCP y 2 skills en una misma ejecución.
+
+`/export` resume las llamadas al MCP («Called bcrp 6 times»). El detalle de cada llamada, con la herramienta y sus
+parámetros, está en el registro completo de la sesión:
+[`evidencias_ia/integracion/15_registro-completo-sesion_2026-11-09.jsonl`](evidencias_ia/integracion/15_registro-completo-sesion_2026-11-09.jsonl).
+Ahí se ven `comparar_departamentos` y `metadatos`, junto con `Skill` para `limpiando-enaho` y `mapeando-enaho`. Después se generó un gráfico del BCRP con `grafico`
 y se verificaron cifras a mano contra la API del BCRP y el INEI (informe, sección 8).
 
 ## 12. Evidencias del uso de IA
@@ -222,7 +227,7 @@ Las conversaciones completas, exportadas con `/export` y numeradas en orden cron
 |---|---|
 | `mcp/` | 02 configuración del MCP · 03 pytest con el BCRP real |
 | `skills/` | 04 `limpiando-enaho` · 05 `graficando-enaho` · 06 `mapeando-enaho` · 07 módulo 05 y composición del ingreso |
-| `integracion/` | 08 actividad principal y cruce · 09 corrida del agente · 10 informe final · 11 verificación de cifras |
+| `integracion/` | 08 actividad principal y cruce · 09 corrida del agente · 10 informe final · 11 verificación de cifras · 15 registro completo de la sesión 09–14 (`.jsonl` de Claude Code, con cada llamada a herramienta y el correo ocultado) |
 | `evaluacion/` | 12 preguntas de evaluación · 13 corrida de la evaluación y comparación |
 
 La 01 es la conversación de planificación en claude.ai y va en la raíz de `evidencias_ia/`. Antes de publicar se
