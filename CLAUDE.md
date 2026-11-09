@@ -76,8 +76,12 @@ Viene de `brisacruz22/mcp-bcrp` (sesión 04), copiado literal y luego extendido.
 
 - [x] Pregunta cerrada; módulos 34, 02 y 05 descargados; guía de variables de la sumaria
 - [x] Parte 1 escrita; probada sin conexión (5 tests con el catálogo real, herramientas nuevas con datos simulados)
-- [ ] Correr `uv run pytest` en la laptop: 10 passed con el BCRP real
+- [x] Correr `uv run pytest` en la laptop: 10 passed con el BCRP real
 - [ ] Parte 2: skills `limpiando-enaho`, `graficando-enaho`, `mapeando-enaho`
+  - [x] `limpiar.py` con los módulos 34 y 02 (copiados a `datos/`), validado; sale `personas_2024.parquet`,
+    `indicadores.csv` y `validacion.txt`
+  - [ ] **Después de validar:** agregar el módulo 05 (empleo por rama). Antes, confirmar en su diccionario la
+    variable de rama y el factor (¿`fac500a`?), decidir cómo agrupar las ramas y a quiénes contar (ocupados, 14+)
 - [ ] Parte 3: corrida del agente, `informes/informe_final.md`, 3 cifras verificadas a mano
 - [ ] Parte 4: 10 preguntas (4 BCRP, 4 ENAHO, 2 combinadas), modos A y B, `comparacion.md`, README de 12 secciones
 - [ ] Pendiente: copia de la guía de variables con una columna de palabras clave para búsqueda en lenguaje natural

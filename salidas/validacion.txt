@@ -1,0 +1,15 @@
+Validación ENAHO 2024 · módulos 34 (sumaria) y 02 (miembros)
+
+[OK] Llaves con sus ceros a la izquierda: anchos fijos (esperado: conglome 6, vivienda 3, hogar 2, codperso 2, ubigeo 6)
+[OK] Hogares únicos en la sumaria: 0 duplicados (esperado: 0)
+[OK] Personas únicas en miembros: 0 duplicadas (esperado: 0)
+[OK] Residentes habituales: 108,664 (esperado: 108,664)
+[OK] La unión no pierde ni duplica personas: 108,664 filas, 0 sin hogar (esperado: 108,664 filas, 0 sin hogar)
+[OK] Departamentos (ubigeo[:2]): 25: 01–25 (esperado: 25: 01–25)
+[OK] Factores de expansión completos y positivos: factor07 0 vacíos, facpob07 0 vacíos (esperado: 0 vacíos, todos > 0)
+[OK] Pobreza nacional (sumaria, factor07 × mieperho): 27.58 % (esperado: 27.6 ± 0.1)
+[OK] Pobreza nacional (personas, facpob07): 27.53 % (esperado: 27.6 ± 0.1)
+[OK] Pobreza urbana (estrato <= 5): 24.81 % (esperado: 24.8 ± 0.1)
+[OK] Pobreza rural (estrato > 5): 39.30 % (esperado: 39.3 ± 0.1)
+
+11 de 11 validaciones aprobadas.
