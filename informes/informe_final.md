@@ -169,10 +169,16 @@ corrida completa del agente está en `evidencias_ia/integracion/09_corrida-agent
 
 | # | Afirmación del informe | Valor recalculado | Procedimiento | ¿Coincide? |
 |---|---|---|---|---|
-| 1 | En Apurímac la minería es el 99.8 % de lo exportado en 2022 (BCRP) | 2,050.77 / 2,054.63 = 99.81 % | `serie("RD40995BA", "2022", "2022")` (tradicionales mineros) y `serie("RD41008BA", "2022", "2022")` (total), divididos a mano | Sí |
-| 2 | La pobreza de Cajamarca es 45.0 % (ENAHO) | 45.01 % | Leyendo directo `sumaria-2024.dta`, sin `limpiar.py`: % ponderado con `factor07 × mieperho` de hogares con `pobreza` <= 2 y `ubigeo[:2] == "06"` | Sí |
-| 3 | La pobreza de Ica es 6.0 % (ENAHO) | 6.01 % | Mismo procedimiento con `ubigeo[:2] == "11"` | Sí |
+| 1 | En Apurímac la minería es el 99.8 % de lo exportado en 2022 (BCRP) | 2,050.77 / 2,054.63 = 99.81 % | Verificado a mano en el navegador: valores de la API del BCRP para [`RD40995BA`](https://estadisticas.bcrp.gob.pe/estadisticas/series/api/RD40995BA/json/2022/2022) (tradicionales mineros) y [`RD41008BA`](https://estadisticas.bcrp.gob.pe/estadisticas/series/api/RD41008BA/json/2022/2022) (total), divididos con calculadora | Sí |
+| 2 | La pobreza de Cajamarca es 45.0 % (ENAHO) | INEI: 45,0 % | Comparación con la cifra puntual por departamento publicada por el INEI (fuente abajo) | Sí (dif. 0.0 pp) |
+| 3 | La pobreza de Ica es 6.0 % (ENAHO) | INEI: 6,0 % | Misma fuente y método | Sí (dif. 0.0 pp) |
 | 4 | La pobreza nacional es 27.6 % (referencia oficial INEI) | 27.58 % | Validación de `limpiar.py` frente a la cifra oficial del INEI | Sí (dif. 0.02 pp, tolerancia 0.1) |
+
+Fuente de las filas 2 y 3: INEI, nota de prensa [«Pobreza monetaria afectó al 27,6% de la población del país en el
+año 2024»](https://www.gob.pe/institucion/inei/noticias/1164173-pobreza-monetaria-afecto-al-27-6-de-la-poblacion-del-pais-en-el-ano-2024)
+(gob.pe), que acompaña al informe técnico «Perú: Evolución de la Pobreza Monetaria, 2015-2024» (INEI, mayo 2025).
+No se usaron los límites de los grupos de departamentos estadísticamente semejantes como verificación: los del grupo 1
+(39,5–44,0) no contienen la propia cifra oficial de Cajamarca (45,0 %).
 
 No hubo diferencias más allá del redondeo. Ninguna herramienta falló en la corrida y ningún departamento quedó sin
 dato.

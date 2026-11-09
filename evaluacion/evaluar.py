@@ -1,14 +1,19 @@
-"""¿Inventa cifras Claude? Las mismas preguntas sin herramientas y con su MCP, contra la cifra oficial.
+"""¿Mejoran el MCP y las skills las respuestas de Claude? Las mismas 10 preguntas en dos modos, contra la verdad.
 
-    uv run evaluar.py                                   # memoria y mcp, con Haiku
-    uv run evaluar.py --modos memoria mcp web --modelo sonnet
+    uv run evaluacion/evaluar.py                       # modos A y B, las 10 preguntas
+    uv run evaluacion/evaluar.py --modos B --ids enaho_pobreza_puno   # probar una sola antes de correr todo
 
-Cada pregunta se le hace a Claude Code en modo no interactivo (claude -p) y debe responder un JSON con el valor.
-Escribe resultados.csv y cuenta cuántas acierta, cuántas se equivoca y en cuántas reconoce que no sabe.
+Modo A: sin MCP ni skills ni herramientas, desde una carpeta vacía (no ve CLAUDE.md, .claude/skills ni salidas/).
+Modo B: desde la raíz del repo, con el MCP del BCRP, las skills y Bash/Read para que corran sus scripts.
+Cada pregunta es una sesión independiente de claude -p (sin persistencia) y debe responder un JSON con el valor.
+Escribe evaluacion/resultados.csv. Las herramientas se leen de la salida stream-json (lo que de verdad llamó),
+no de lo que el modelo dice. La interpretación de las preguntas combinadas la califica una persona en la columna
+interpretacion_ok, con el criterio de preguntas.csv.
 """
 import argparse
 import json
 import subprocess
+import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -16,57 +21,107 @@ from pathlib import Path
 import pandas as pd
 
 AQUI = Path(__file__).parent
-ESQUEMA = {"type": "object", "required": ["valor", "fuente"],
+RAIZ = AQUI.parent
+MCP_JSON = RAIZ / ".mcp.json"
+ESQUEMA = {"type": "object", "required": ["valor", "fuente", "interpretacion"],
            "properties": {"valor": {"type": ["number", "null"]}, "unidad": {"type": "string"},
-                          "fuente": {"type": "string"}}}
-INSTRUCCION = ("Responde con un solo número en «valor», en la unidad que pide la pregunta. En «fuente» di de dónde sale la cifra.\n\n")
-MODOS = {   # todas sin las herramientas de archivos y terminal de Claude Code
-    "memoria": ["--tools", "", "--strict-mcp-config"],
-    "web": ["--tools", "WebSearch,WebFetch", "--allowedTools", "WebSearch,WebFetch", "--strict-mcp-config"],
-    "mcp": ["--tools", "", "--strict-mcp-config", "--mcp-config", str(AQUI / ".mcp.json"), "--allowedTools", "mcp__bcrp"],
+                          "fuente": {"type": "string"}, "interpretacion": {"type": "string"}}}
+INSTRUCCION = ("Responde con un solo número en «valor», en la unidad que pide la pregunta; si no puedes obtenerlo, "
+               "usa null. En «fuente» di de dónde sale la cifra. En «interpretacion», una o dos oraciones.\n\n")
+HERRAMIENTAS_B = "Bash,Read,Glob,Grep,Skill,ToolSearch"
+MODOS = {
+    "A": {"args": ["--tools", "", "--strict-mcp-config"], "cwd": None},            # cwd: carpeta temporal vacía
+    "B": {"args": ["--tools", HERRAMIENTAS_B, "--strict-mcp-config", "--mcp-config", str(MCP_JSON),
+                   "--allowedTools", HERRAMIENTAS_B + ",mcp__bcrp"], "cwd": RAIZ},
 }
 
 
-def preguntar(pregunta, modo, modelo):
-    cmd = ["claude", "-p", INSTRUCCION + pregunta, "--output-format", "json", "--json-schema", json.dumps(ESQUEMA),
-           "--no-session-persistence", "--model", modelo, *MODOS[modo]]
+def leer_stream(texto):
+    """De la salida stream-json saca las herramientas llamadas y el evento final («result»)."""
+    herramientas, final = [], {}
+    for linea in texto.splitlines():
+        try:
+            evento = json.loads(linea)
+        except json.JSONDecodeError:
+            continue
+        if evento.get("type") == "assistant":
+            for parte in evento.get("message", {}).get("content", []):
+                if parte.get("type") == "tool_use":
+                    nombre = parte["name"]
+                    if nombre == "Skill":                      # anotar qué skill se usó
+                        nombre += ":" + str(parte.get("input", {}).get("skill", "?"))
+                    herramientas.append(nombre)
+        elif evento.get("type") == "result":
+            final = evento
+    return herramientas, final
+
+
+def preguntar(pregunta, modo, modelo, carpeta_vacia):
+    cmd = ["claude", "-p", INSTRUCCION + pregunta, "--output-format", "stream-json", "--verbose",
+           "--json-schema", json.dumps(ESQUEMA), "--no-session-persistence", "--model", modelo, *MODOS[modo]["args"]]
     t = time.time()
-    proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600, cwd=AQUI)
+    error = ""
     try:
-        salida = json.loads(proc.stdout)
-    except json.JSONDecodeError:
-        salida = {"result": (proc.stdout + proc.stderr)[-300:]}
-    r = salida.get("structured_output") or {}
-    return {"valor": r.get("valor"), "fuente": r.get("fuente", salida.get("result", "")),
-            "segundos": round(time.time() - t, 1), "turnos": salida.get("num_turns")}
+        proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                              timeout=1200 if modo == "B" else 300, cwd=MODOS[modo]["cwd"] or carpeta_vacia)
+        herramientas, final = leer_stream(proc.stdout)
+        if proc.returncode != 0 or not final:
+            error = (proc.stderr or proc.stdout)[-300:]
+    except subprocess.TimeoutExpired:
+        herramientas, final, error = [], {}, "tiempo agotado"
+    r = final.get("structured_output")
+    if r is None:                                              # por si el JSON vino como texto en «result»
+        try:
+            r = json.loads(final.get("result", ""))
+        except (json.JSONDecodeError, TypeError):
+            r = {}
+    return {"valor": r.get("valor"), "fuente_respuesta": r.get("fuente", ""),
+            "interpretacion": r.get("interpretacion", ""),
+            "herramientas": ", ".join(dict.fromkeys(herramientas)),   # sin repetidos, en orden de uso
+            "n_llamadas": len(herramientas), "segundos": round(time.time() - t, 1),
+            "turnos": final.get("num_turns"), "error": error}
 
 
 def calificar(valor, verdad, tolerancia):
     if valor is None:
-        return "no sabe"
+        return "no responde"
     return "acierta" if abs(valor - verdad) <= tolerancia else "se equivoca"
 
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--modos", nargs="+", default=["memoria", "mcp"], choices=list(MODOS))
-    p.add_argument("--modelo", default="haiku")
-    p.add_argument("--preguntas", default=str(AQUI / "preguntas.csv"))
-    p.add_argument("--paralelo", type=int, default=4)
+    p.add_argument("--modos", nargs="+", default=["A", "B"], choices=list(MODOS))
+    p.add_argument("--modelo", default="claude-opus-5-5")           # el mismo de la corrida del agente
+    p.add_argument("--ids", nargs="+", help="solo estas preguntas (para probar)")
+    p.add_argument("--paralelo", type=int, default=4, help="solo modo A; el B va de a una (limpiar.py escribe salidas/)")
     a = p.parse_args()
-    if "mcp" in a.modos and not (AQUI / ".mcp.json").exists():
-        raise SystemExit("Falta .mcp.json. Conecten su servidor: claude mcp add --scope project bcrp -- uv run server.py")
+    if "B" in a.modos and not MCP_JSON.exists():
+        raise SystemExit(f"Falta {MCP_JSON}. Conecten el servidor: claude mcp add --scope project bcrp -- uv run mcp/server.py")
 
-    preguntas = pd.read_csv(a.preguntas)
-    casos = [(q, m) for q in preguntas.itertuples() for m in a.modos]
-    print(f"{len(casos)} llamadas a claude -p con {a.modelo}...")
-    with ThreadPoolExecutor(a.paralelo) as ex:
-        respuestas = list(ex.map(lambda c: preguntar(c[0].pregunta, c[1], a.modelo), casos))
+    preguntas = pd.read_csv(AQUI / "preguntas.csv")
+    if a.ids:
+        preguntas = preguntas[preguntas.id.isin(a.ids)]
+    print(f"{len(preguntas) * len(a.modos)} llamadas a claude -p con {a.modelo}...")
+    respuestas = {}
+    with tempfile.TemporaryDirectory() as vacia:
+        if "A" in a.modos:
+            with ThreadPoolExecutor(a.paralelo) as ex:
+                for q, r in zip(preguntas.itertuples(), ex.map(lambda q: preguntar(q.pregunta, "A", a.modelo, vacia),
+                                                               preguntas.itertuples())):
+                    respuestas[(q.id, "A")] = r
+        if "B" in a.modos:
+            for q in preguntas.itertuples():
+                print(f"  B · {q.id}")
+                respuestas[(q.id, "B")] = preguntar(q.pregunta, "B", a.modelo, vacia)
 
-    filas = [{"id": q.id, "modo": m, "verdad": q.verdad, **r, "resultado": calificar(r["valor"], q.verdad, q.tolerancia)}
-             for (q, m), r in zip(casos, respuestas)]
+    filas = [{"id": q.id, "fuente": q.fuente, "modo": m, "pregunta": q.pregunta, "verdad": q.verdad,
+              "tolerancia": q.tolerancia, **respuestas[(q.id, m)],
+              "resultado": calificar(respuestas[(q.id, m)]["valor"], q.verdad, q.tolerancia),
+              "criterio_interpretacion": q.criterio_interpretacion if isinstance(q.criterio_interpretacion, str) else "",
+              "interpretacion_ok": ""}                                # lo llena una persona en las combinadas
+             for q in preguntas.itertuples() for m in a.modos]
     res = pd.DataFrame(filas)
-    res.to_csv(AQUI / "resultados.csv", index=False)
+    res.to_csv(AQUI / "resultados.csv", index=False, encoding="utf-8")
 
     print("\n" + res.pivot(index="id", columns="modo", values="valor").to_string())
     tabla = res.groupby("modo").resultado.value_counts().unstack(fill_value=0)
