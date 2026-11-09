@@ -1,7 +1,7 @@
 [project]
-name = "mcp-bcrp"
+name = "agente-de-investigacion-socioeconomica"
 version = "0.1.0"
-description = "Servidor MCP con las series oficiales del BCRP"
+description = "Agente de investigación socioeconómica del Perú: MCP del BCRP y skills de la ENAHO 2024"
 requires-python = ">=3.11"
 dependencies = [
     "fastmcp>=4,<5",
@@ -12,3 +12,6 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["mcp"]

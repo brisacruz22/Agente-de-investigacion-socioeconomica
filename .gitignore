@@ -2,4 +2,9 @@
 datos/
 __pycache__/
 .pytest_cache/
-salidas/
+salidas/*.parquet
+
+# Microdatos del INEI: viven fuera del repo
+*.dta
+*.zip
+966-Modulo*/
