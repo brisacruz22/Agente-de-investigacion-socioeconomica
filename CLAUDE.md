@@ -65,6 +65,13 @@ Viene de `brisacruz22/mcp-bcrp` (sesión 04), copiado literal y luego extendido.
 - Brisa debe poder explicar cada línea de código: explicar antes de escribir y no agregar piezas que no pidió.
 - Brisa hace los commits desde GitHub Desktop.
 
+## Evidencias de IA
+
+- Cada vez que cerremos un paso de la tarea (un test que pasa, una skill terminada, un commit) o cuando Brisa se
+  despida, recordarle en una línea correr `/export` y darle el nombre exacto del archivo y la subcarpeta de
+  `evidencias_ia/` donde va (`mcp`, `skills`, `integracion` o `evaluacion`), con numeración correlativa y fecha:
+  `NN_tema_AAAA-MM-DD.md`. Llevar la cuenta del último número usado leyendo `evidencias_ia/`.
+
 ## Estado (9 nov 2026) y siguiente paso
 
 - [x] Pregunta cerrada; módulos 34, 02 y 05 descargados; guía de variables de la sumaria
