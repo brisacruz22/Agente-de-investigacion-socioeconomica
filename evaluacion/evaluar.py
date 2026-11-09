@@ -46,7 +46,7 @@ def leer_stream(texto):
             continue
         if evento.get("type") == "assistant":
             for parte in evento.get("message", {}).get("content", []):
-                if parte.get("type") == "tool_use":
+                if parte.get("type") == "tool_use" and parte["name"] != "StructuredOutput":  # así entrega el JSON
                     nombre = parte["name"]
                     if nombre == "Skill":                      # anotar qué skill se usó
                         nombre += ":" + str(parte.get("input", {}).get("skill", "?"))
